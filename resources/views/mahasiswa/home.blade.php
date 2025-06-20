@@ -54,7 +54,9 @@
 
                 <div class="mt-2">
                     <h5>Gender Statistics</h5>
-                    <canvas id="genderChart" width="400" height="200"></canvas>
+                    <div class="chart-wrapper" style="height: 300px;">
+                        <canvas id="genderChart"></canvas>
+                    </div>
                 </div>
 
                 <div class="d-flex justify-content-center">
@@ -79,40 +81,89 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var ctx = document.getElementById('genderChart').getContext('2d');
+            
+            Chart.register(ChartDataLabels);
+            
+            // Data untuk pie chart
+            var genderLabels = {!! json_encode($genderStatistics->pluck("gender")) !!};
+            var genderData = {!! json_encode($genderStatistics->pluck("total")) !!};
+            
+            // Warna untuk pie chart dengan tema CoreUI
+            var colors = [
+                '#20a8d8', // CoreUI primary blue
+                '#f86c6b', // CoreUI danger red  
+            ];
+            
             var genderChart = new Chart(ctx, {
-                type: 'bar',
+                type: 'pie',
                 data: {
-                    labels: {!! json_encode($genderStatistics->pluck("gender")) !!},
+                    labels: genderLabels,
                     datasets: [{
-                        label: 'Total',
-                        data: {!! json_encode($genderStatistics->pluck("total")) !!},
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.2)',
-                            'rgba(54, 162, 235, 0.2)',
-                        ],
-                        borderColor: [
-                            'rgba(255, 99, 132, 1)',
-                            'rgba(54, 162, 235, 1)',
-                        ],
-                        borderWidth: 1
+                        data: genderData,
+                        backgroundColor: colors.slice(0, genderLabels.length),
+                        borderColor: '#fff',
+                        borderWidth: 2,
+                        hoverBorderWidth: 3,
+                        hoverBorderColor: '#fff'
                     }]
                 },
                 options: {
-                    scales: {
-                        yAxes: [{
-                            ticks: {
-                                beginAtZero: true
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: {
+                                    size: 14
+                                }
                             }
-                        }]
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    var label = context.label || '';
+                                    var value = context.parsed;
+                                    var total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    var percentage = ((value / total) * 100).toFixed(1);
+                                    return label + ': ' + value + ' (' + percentage + '%)';
+                                }
+                            }
+                        },
+                        datalabels: {
+                            color: '#fff',
+                            font: {
+                                weight: 'bold',
+                                size: 16
+                            },
+                            formatter: function(value, context) {
+                                var total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                var percentage = ((value / total) * 100).toFixed(1);
+                                return value + '\n(' + percentage + '%)';
+                            }
+                        }
+                    },
+                    elements: {
+                        arc: {
+                            borderAlign: 'center'
+                        }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        animateScale: true
                     }
                 }
             });
         });
 
+        // Search functionality
         $(document).ready(function() {
             $('#query').on('keyup', function() {
                 var value = $(this).val().toLowerCase();
