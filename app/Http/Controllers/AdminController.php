@@ -1,92 +1,83 @@
 <?php
-
 namespace App\Http\Controllers;
-
 use App\Http\Controllers\Controller;
-use App\Models\Mahasiswa;
+use App\Models\Produk;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
     public function index() //INDEX ATAU HOME
     {
-        $mahasiswas = Mahasiswa::all();
-        return view('admin.index', compact('mahasiswas'));
+        $produks = Produk::all();
+        return view('admin.index', compact('produks'));
     }
 
-
-    public function showByNim($nim) //MENAMPILKAN BEDASARKAN NIME
+    public function showById($id) //MENAMPILKAN BERDASARKAN ID
     {
-        $mahasiswa = Mahasiswa::where('nim', $nim)->firstOrFail();
-        return view('admin.show', compact('mahasiswa'));
+        $produk = Produk::findOrFail($id);
+        return view('admin.show', compact('produk'));
     }
 
-    public function delete($nim) //MENGHAPUS BEDASARKAN NIM
+    public function delete($id) //MENGHAPUS BERDASARKAN ID
     {
-        $mahasiswa = Mahasiswa::where('nim', $nim)->firstOrFail();
-        $mahasiswa->delete();
-
-        return redirect()->route('admin.index')->with('success', 'Mahasiswa berhasil dihapus.');
+        $produk = Produk::findOrFail($id);
+        $produk->delete();
+        return redirect()->route('admin.index')->with('success', 'Produk berhasil dihapus.');
     }
 
-    public function edit($nim) //TAMPILAN UNTUK EDIT BEDASARKAN NIM
+    public function edit($id) //TAMPILAN UNTUK EDIT BERDASARKAN ID
     {
-        $mahasiswa = Mahasiswa::where('nim', $nim)->firstOrFail();
-        return view('admin.edit', compact('mahasiswa'));
+        $produk = Produk::findOrFail($id);
+        return view('admin.edit', compact('produk'));
     }
 
-    public function update(Request $request, $nim) //FUNCTION POST UNTUK UPDATE BEDASARKAN NIM
+    public function update(Request $request, $id) //FUNCTION POST UNTUK UPDATE BERDASARKAN ID
     {
         // Validate the request data
         $request->validate([
             'nama' => 'required|string|max:255',
-            'nim' => 'required|string|max:255',
-            'alamat' => 'required|string|max:255',
-            'usia' => 'required|numeric',
-            'gender' => 'required|in:L,P',
-            'tanggal_lahir' => 'required|date',
+            'deskripsi' => 'required|string',
+            'harga' => 'required|numeric|min:0',
+            'stok' => 'required|integer|min:0',
         ]);
 
-        // Find the mahasiswa to be updated
-        $mahasiswa = Mahasiswa::where('nim', $nim)->firstOrFail();
+        // Find the produk to be updated
+        $produk = Produk::findOrFail($id);
 
-        // Update the mahasiswa
-        $mahasiswa->update([
+        // Update the produk
+        $produk->update([
             'nama' => $request->input('nama'),
-            'alamat' => $request->input('alamat'),
-            'usia' => $request->input('usia'),
-            'gender' => $request->input('gender'), // Ini seharusnya sudah benar
-            'tanggal_lahir' => $request->input('tanggal_lahir'),
+            'deskripsi' => $request->input('deskripsi'),
+            'harga' => $request->input('harga'),
+            'stok' => $request->input('stok'),
         ]);
 
         // Redirect back to the index page with a success message
-        return redirect()->route('admin.index')->with('success', 'Mahasiswa berhasil diperbarui.');
+        return redirect()->route('admin.index')->with('success', 'Produk berhasil diperbarui.');
     }
+
     public function store(Request $request) //FUNCTION POST UNTUK MENAMBAHKAN DATA
     {
         // Validate the request data
         $request->validate([
             'nama' => 'required|string|max:255',
-            'nim' => 'required|string|max:255|unique:mahasiswas,nim',
-            'alamat' => 'required|string|max:255',
-            'usia' => 'required|numeric',
-            'gender' => 'required|in:L,P',
-            'tanggal_lahir' => 'required|date',
+            'deskripsi' => 'required|string',
+            'harga' => 'required|numeric|min:0',
+            'stok' => 'required|integer|min:0',
         ]);
 
-        // Create the mahasiswa
-        Mahasiswa::create([
+        // Create the produk
+        Produk::create([
             'nama' => $request->input('nama'),
-            'nim' => $request->input('nim'),
-            'alamat' => $request->input('alamat'),
-            'usia' => $request->input('usia'),
-            'gender' => $request->input('gender'),
-            'tanggal_lahir' => $request->input('tanggal_lahir'),
+            'deskripsi' => $request->input('deskripsi'),
+            'harga' => $request->input('harga'),
+            'stok' => $request->input('stok'),
         ]);
 
         // Redirect back to the index page with a success message
-        return redirect()->route('admin.index')->with('success', 'Mahasiswa berhasil ditambahkan.');
+        return redirect()->route('admin.index')->with('success', 'Produk berhasil ditambahkan.');
     }
+
     public function create() //TAMPILAN UNTUK MENAMBAHKAN DATA
     {
         return view('admin.create');
